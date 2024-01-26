@@ -7,9 +7,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
-from .models import Test
-from .serializers import TestSerializer
-
+from .models import Test, Section
+from .serializers import TestSerializer, SectionSerializer
+from .permissions import IsTestOwner
 
 class UserRegistration(generics.CreateAPIView):
     """Registers User"""
@@ -71,3 +71,31 @@ class TestDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer.save(created_by=self.request.user)
 
 
+class SectionListView(generics.ListAPIView):
+    serializer_class = SectionSerializer
+    permission_classes = [IsTestOwner, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get(self, request, *args, **kwargs):
+        testid = kwargs['testid']
+        try:
+            objs = Section.objects.filter(test_id=testid)
+        except:
+            return Response({'detail': 'no section created'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(objs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SectionCreateView(generics.CreateAPIView):
+    queryset = Section.objects.all()
+    serializer_class = SectionSerializer
+    permission_classes = [IsTestOwner, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+
+class SectionDestroyView(generics.DestroyAPIView):
+    queryset = Section.objects.all()
+    serializer_class = SectionSerializer
+    permission_classes = [IsTestOwner, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    lookup_field = 'sid'

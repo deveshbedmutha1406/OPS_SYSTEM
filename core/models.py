@@ -8,3 +8,15 @@ class Test(models.Model):
     description = models.TextField()
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
+
+
+class Section(models.Model):
+    TYPE_CHOICES = [
+        ('MCQ', 'Multiple Choice Question (MCQ)'),
+        ('CODING', 'Coding'),
+        ('SUBJECTIVE', 'Subjective')
+    ]
+
+    sid = models.AutoField(primary_key=True)
+    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
+    qtype = models.CharField(max_length=10, choices=TYPE_CHOICES)

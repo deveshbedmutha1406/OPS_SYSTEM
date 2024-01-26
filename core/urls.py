@@ -9,4 +9,7 @@ urlpatterns = [
     path('test/', views.TestListCreateView.as_view()),
     path('test/<int:testid>', views.TestDetailView.as_view()),
 
+    path('getSection/<int:testid>', views.SectionListView.as_view()),
+    path('createSection/', views.SectionCreateView.as_view()),
+    path('removeSection/<int:sid>', views.SectionDestroyView.as_view()),
 ]

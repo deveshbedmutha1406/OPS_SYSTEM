@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from .models import Test
+from .models import Test, Section
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -24,4 +24,11 @@ class TestSerializer(serializers.ModelSerializer):
         model = Test
         fields = '__all__'
         extra_kwargs = {'created_by': {'read_only': True}}
+
+
+class SectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Section
+        fields = '__all__'
+
 
