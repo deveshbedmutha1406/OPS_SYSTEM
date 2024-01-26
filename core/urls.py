@@ -12,4 +12,7 @@ urlpatterns = [
     path('getSection/<int:testid>', views.SectionListView.as_view()),
     path('createSection/', views.SectionCreateView.as_view()),
     path('removeSection/<int:sid>', views.SectionDestroyView.as_view()),
+
+    path('mcq/', views.McqListCreateView.as_view()),
+    path('mcq/<int:pk>/', views.McqDetailView.as_view()),
 ]

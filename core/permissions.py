@@ -12,7 +12,6 @@ class IsTestOwner(permissions.BasePermission):
 
         if testid is None:
             raise PermissionDenied('test id not found in either params or request data')
-        print('inside permissoin', testid)
         try:
             objs = Test.objects.get(testid=testid)
         except:

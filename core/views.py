@@ -7,9 +7,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
-from .models import Test, Section
-from .serializers import TestSerializer, SectionSerializer
+from .models import Test, Section, Mcq
+from .serializers import TestSerializer, SectionSerializer, McqSerializer
 from .permissions import IsTestOwner
+import json
 
 class UserRegistration(generics.CreateAPIView):
     """Registers User"""
@@ -99,3 +100,27 @@ class SectionDestroyView(generics.DestroyAPIView):
     permission_classes = [IsTestOwner, IsAuthenticated]
     authentication_classes = [TokenAuthentication]
     lookup_field = 'sid'
+
+
+class McqListCreateView(generics.ListCreateAPIView):
+    serializer_class = McqSerializer
+    permission_classes = [IsAuthenticated, IsTestOwner]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.request.data['test_id']
+        return Mcq.objects.filter(test_id=testid)
+
+    def perform_create(self, serializer):
+        serializer.save(settersid=self.request.user)
+
+
+class McqDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Mcq.objects.all()
+    serializer_class = McqSerializer
+    permission_classes = [IsTestOwner, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.request.data['test_id']
+        return Mcq.objects.filter(test_id=testid)
