@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
+from .models import Test
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -16,3 +17,11 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         Token.objects.create(user=user)
         return user
+
+
+class TestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Test
+        fields = '__all__'
+        extra_kwargs = {'created_by': {'read_only': True}}
+
