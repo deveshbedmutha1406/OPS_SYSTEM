@@ -15,4 +15,7 @@ urlpatterns = [
 
     path('mcq/', views.McqListCreateView.as_view()),
     path('mcq/<int:pk>/', views.McqDetailView.as_view()),
+
+    path('subjective/', views.SubjectListCreateView.as_view()),
+    path('subjective/<int:pk>/', views.SubjectiveDetailView.as_view()),
 ]

@@ -7,8 +7,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
-from .models import Test, Section, Mcq
-from .serializers import TestSerializer, SectionSerializer, McqSerializer
+from .models import Test, Section, Mcq, Subjective
+from .serializers import TestSerializer, SectionSerializer, McqSerializer, SubjectiveSerializer
 from .permissions import IsTestOwner
 import json
 
@@ -124,3 +124,27 @@ class McqDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         testid = self.request.data['test_id']
         return Mcq.objects.filter(test_id=testid)
+
+
+class SubjectListCreateView(generics.ListCreateAPIView):
+    serializer_class = SubjectiveSerializer
+    permission_classes = [IsTestOwner, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.request.data['test_id']
+        return Subjective.objects.filter(test_id=testid)
+
+    def perform_create(self, serializer):
+        serializer.save(setters_id=self.request.user)
+
+
+class SubjectiveDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Subjective.objects.all()
+    serializer_class = SubjectiveSerializer
+    permission_classes = [IsTestOwner, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.request.data['test_id']
+        return Subjective.objects.filter(test_id=testid)
