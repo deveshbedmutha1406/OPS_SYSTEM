@@ -18,4 +18,6 @@ urlpatterns = [
 
     path('subjective/', views.SubjectListCreateView.as_view()),
     path('subjective/<int:pk>/', views.SubjectiveDetailView.as_view()),
+
+    path('testRegistration/<int:testid>/', views.RegisterUserTest.as_view()),
 ]

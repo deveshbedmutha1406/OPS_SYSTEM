@@ -1,10 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from .models import Test, Section, Mcq, Subjective
+from .models import Test, Section, Mcq, Subjective, RegisteredUser
+
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ('id', 'username', 'password', 'email')
@@ -13,7 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop('password')
         user = User(**validated_data)
-        user.set_password(password) # to make password hashed.
+        user.set_password(password)  # to make password hashed.
         user.save()
         Token.objects.create(user=user)
         return user
@@ -44,3 +44,10 @@ class SubjectiveSerializer(serializers.ModelSerializer):
         model = Subjective
         fields = '__all__'
         extra_kwargs = {'setters_id': {'read_only': True}}
+
+
+class RegisterUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegisteredUser
+        fields = '__all__'
+        extra_kwargs = {'user_id': {'read_only': True}}

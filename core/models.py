@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Test(models.Model):
     testid = models.AutoField(primary_key=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -36,8 +37,19 @@ class Mcq(models.Model):
         ('A', 'a'), ('B', 'b'), ('C', 'c'), ('D', 'd')
     ])
 
+
 class Subjective(models.Model):
     qid = models.AutoField(primary_key=True)
     setters_id = models.ForeignKey(User, on_delete=models.CASCADE)
     test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
     statement = models.TextField()
+
+
+class RegisteredUser(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
+    embedding1 = models.TextField()
+    embedding2 = models.TextField()
+
+    class Meta:
+        unique_together = ('user_id', 'test_id')  # Composite Primary Key

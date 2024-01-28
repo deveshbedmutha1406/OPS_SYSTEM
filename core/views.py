@@ -7,10 +7,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
-from .models import Test, Section, Mcq, Subjective
-from .serializers import TestSerializer, SectionSerializer, McqSerializer, SubjectiveSerializer
-from .permissions import IsTestOwner
-import json
+from .models import Test, Section, Mcq, Subjective, RegisteredUser
+from .serializers import TestSerializer, SectionSerializer, McqSerializer, SubjectiveSerializer, RegisterUserSerializer
+from .permissions import IsTestOwner, IsOtherThanOwner
+
 
 class UserRegistration(generics.CreateAPIView):
     """Registers User"""
@@ -20,6 +20,7 @@ class UserRegistration(generics.CreateAPIView):
 
 class LoginUser(ObtainAuthToken):
     """Validate User Credentials And Return Token"""
+
     def post(self, request, *args, **kwargs):
         print(request.data.get('password'))
         user = authenticate(username=request.data.get('username'), password=request.data.get('password'))
@@ -33,7 +34,6 @@ class LoginUser(ObtainAuthToken):
             return Response({'token': token.key, 'user_id': token.user_id})
         else:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-
 
 
 class LogoutUser(generics.GenericAPIView):
@@ -108,7 +108,7 @@ class McqListCreateView(generics.ListCreateAPIView):
     authentication_classes = [TokenAuthentication]
 
     def get_queryset(self):
-        testid = self.request.data['test_id']
+        testid = self.request.query_params.get('testid', None)
         return Mcq.objects.filter(test_id=testid)
 
     def perform_create(self, serializer):
@@ -148,3 +148,28 @@ class SubjectiveDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         testid = self.request.data['test_id']
         return Subjective.objects.filter(test_id=testid)
+
+
+class RegisterUserTest(generics.CreateAPIView, generics.RetrieveAPIView):
+    serializer_class = RegisterUserSerializer
+    permission_classes = [IsAuthenticated, IsOtherThanOwner]
+    authentication_classes = [TokenAuthentication]
+
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        test_id = kwargs.get('testid', None)
+        if test_id is None:
+            return Response({'error': 'testid not provided'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            test_instance = Test.objects.get(testid=test_id)
+        except:
+            return Response({'error': 'invalid test id provided'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            print('inside try', RegisteredUser.objects.all())
+            data = RegisteredUser.objects.get(user_id=request.user, test_id=test_instance)
+        except:
+            return Response({'error': f"No Data Found"}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(self.serializer_class(data).data, status=status.HTTP_200_OK)
