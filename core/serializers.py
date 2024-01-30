@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from .models import Test, Section, Mcq, Subjective, RegisteredUser
+from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -57,3 +57,10 @@ class ListMcqSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mcq
         fields = ['qid', 'test_id', 'qno', 'question_text', 'optionA', 'optionB', 'optionC', 'optionD']
+
+
+class McqSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = McqSubmission
+        fields = '__all__'
+        extra_kwargs = {'user_id': {'read_only': True}}

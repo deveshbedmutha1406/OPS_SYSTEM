@@ -53,3 +53,14 @@ class RegisteredUser(models.Model):
 
     class Meta:
         unique_together = ('user_id', 'test_id')  # Composite Primary Key
+
+
+class McqSubmission(models.Model):
+    subid = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
+    ques_id = models.ForeignKey(Mcq, on_delete=models.CASCADE)
+    marked_option = models.CharField(max_length=2)
+
+    class Meta:
+        unique_together = ('user_id', 'test_id', 'ques_id')

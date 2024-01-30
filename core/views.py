@@ -7,9 +7,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
-from .models import Test, Section, Mcq, Subjective, RegisteredUser
+from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission
 from .serializers import TestSerializer, SectionSerializer, McqSerializer, SubjectiveSerializer, RegisterUserSerializer, \
-    ListMcqSerializer
+    ListMcqSerializer, McqSubmissionSerializer
 from .permissions import IsTestOwner, IsOtherThanOwner, IsRegisterForTest
 
 
@@ -184,3 +184,29 @@ class GetMcqQuestions(generics.ListAPIView):
     def get_queryset(self):
         testid = self.kwargs.get('testid', None)
         return Mcq.objects.filter(test_id=testid)
+
+
+class SubmitMcq(generics.ListCreateAPIView):
+    serializer_class = McqSubmissionSerializer
+    permission_classes = [IsAuthenticated, IsRegisterForTest]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.kwargs.get('testid', None)
+        return McqSubmission.objects.filter(test_id=testid, user_id=self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated = serializer.validated_data
+        # check if already submission exists.
+        try:
+            sub_instance = McqSubmission.objects.get(user_id=request.user, ques_id=validated.get('ques_id'),
+                                                      test_id=validated.get('test_id'))
+            sub_instance.marked_option = validated.get('marked_option')
+            sub_instance.save()
+            return Response(self.serializer_class(sub_instance).data, status=status.HTTP_201_CREATED)
+        except:
+            # not exist before so create one
+            serializer.save(user_id=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)

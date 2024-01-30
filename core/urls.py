@@ -22,4 +22,5 @@ urlpatterns = [
     path('testRegistration/<int:testid>/', views.RegisterUserTest.as_view()),
 
     path('getMcqQuestion/<int:testid>/', views.GetMcqQuestions.as_view()),
+    path('submitMcq/<int:testid>/', views.SubmitMcq.as_view()),
 ]
