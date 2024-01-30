@@ -51,3 +51,9 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         model = RegisteredUser
         fields = '__all__'
         extra_kwargs = {'user_id': {'read_only': True}}
+
+
+class ListMcqSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Mcq
+        fields = ['qid', 'test_id', 'qno', 'question_text', 'optionA', 'optionB', 'optionC', 'optionD']

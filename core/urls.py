@@ -20,4 +20,6 @@ urlpatterns = [
     path('subjective/<int:pk>/', views.SubjectiveDetailView.as_view()),
 
     path('testRegistration/<int:testid>/', views.RegisterUserTest.as_view()),
+
+    path('getMcqQuestion/<int:testid>/', views.GetMcqQuestions.as_view()),
 ]

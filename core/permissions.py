@@ -1,7 +1,7 @@
 from rest_framework import permissions
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotFound
 
-from .models import Test
+from .models import Test, RegisteredUser
 
 
 class IsTestOwner(permissions.BasePermission):
@@ -34,4 +34,18 @@ class IsOtherThanOwner(permissions.BasePermission):
             except:
                 raise PermissionDenied('no such test id exists')
             return request.user != test_instance.created_by
+        return False
+
+
+class IsRegisterForTest(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        """Check if user is registered to that test"""
+        test_id = view.kwargs.get('testid', None)
+        if test_id:
+            try:
+                register_user_instance = RegisteredUser.objects.get(test_id=test_id, user_id=request.user)
+                return True
+            except:
+                raise NotFound()
         return False

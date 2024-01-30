@@ -8,8 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from .models import Test, Section, Mcq, Subjective, RegisteredUser
-from .serializers import TestSerializer, SectionSerializer, McqSerializer, SubjectiveSerializer, RegisterUserSerializer
-from .permissions import IsTestOwner, IsOtherThanOwner
+from .serializers import TestSerializer, SectionSerializer, McqSerializer, SubjectiveSerializer, RegisterUserSerializer, \
+    ListMcqSerializer
+from .permissions import IsTestOwner, IsOtherThanOwner, IsRegisterForTest
 
 
 class UserRegistration(generics.CreateAPIView):
@@ -173,3 +174,13 @@ class RegisterUserTest(generics.CreateAPIView, generics.RetrieveAPIView):
             return Response({'error': f"No Data Found"}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(self.serializer_class(data).data, status=status.HTTP_200_OK)
+
+
+class GetMcqQuestions(generics.ListAPIView):
+    serializer_class = ListMcqSerializer
+    permission_classes = [IsAuthenticated, IsRegisterForTest]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.kwargs.get('testid', None)
+        return Mcq.objects.filter(test_id=testid)
