@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission
+from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission, SubjectiveSubmission
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -54,13 +54,51 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
 
 class ListMcqSerializer(serializers.ModelSerializer):
+    marked_option = serializers.SerializerMethodField()
+
     class Meta:
         model = Mcq
-        fields = ['qid', 'test_id', 'qno', 'question_text', 'optionA', 'optionB', 'optionC', 'optionD']
+        fields = ['qid', 'test_id', 'qno', 'question_text', 'optionA', 'optionB', 'optionC', 'optionD', 'marked_option']
 
+    def get_marked_option(self, obj):
+        try:
+            obj = McqSubmission.objects.get(
+                test_id=obj.test_id,
+                user_id=self.context['request'].user,
+                ques_id=obj.qid
+            )
+            return obj.marked_option
+        except:
+            return None
 
 class McqSubmissionSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = McqSubmission
+        fields = '__all__'
+        extra_kwargs = {'user_id': {'read_only': True}}
+
+
+class ListSubjectiveSerializer(serializers.ModelSerializer):
+    submitted_ans = serializers.SerializerMethodField()
+    class Meta:
+        model = Subjective
+        fields = ['qid', 'test_id', 'statement', 'submitted_ans']
+
+    def get_submitted_ans(self, obj):
+        try:
+            obj = SubjectiveSubmission.objects.get(
+                test_id=obj.test_id,
+                user_id=self.context['request'].user,
+                ques_id=obj.qid
+            )
+            return obj.submitted_answer
+        except:
+            return None
+
+class SubjectiveSubmissionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SubjectiveSubmission
         fields = '__all__'
         extra_kwargs = {'user_id': {'read_only': True}}

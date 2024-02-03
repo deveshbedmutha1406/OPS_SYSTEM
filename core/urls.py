@@ -23,4 +23,7 @@ urlpatterns = [
 
     path('getMcqQuestion/<int:testid>/', views.GetMcqQuestions.as_view()),
     path('submitMcq/<int:testid>/', views.SubmitMcq.as_view()),
+
+    path('getSubjectiveQuestions/<int:testid>/', views.GetSubjectiveQuestions.as_view()),
+    path('submitSubjective/<int:testid>/', views.SubmitSubjective.as_view()),
 ]

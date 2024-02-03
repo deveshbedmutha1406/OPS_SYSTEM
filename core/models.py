@@ -64,3 +64,14 @@ class McqSubmission(models.Model):
 
     class Meta:
         unique_together = ('user_id', 'test_id', 'ques_id')
+
+
+class SubjectiveSubmission(models.Model):
+    subid = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
+    ques_id = models.ForeignKey(Subjective, on_delete=models.CASCADE)
+    submitted_answer = models.TextField()
+
+    class Meta:
+        unique_together = ('user_id', 'test_id', 'ques_id')
