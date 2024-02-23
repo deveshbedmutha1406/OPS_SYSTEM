@@ -48,7 +48,7 @@ class Subjective(models.Model):
 class RegisteredUser(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
-    embedding1 = models.TextField()
+    embedding1 = models.TextField()    # this are face embeddings of user.
     embedding2 = models.TextField()
 
     class Meta:

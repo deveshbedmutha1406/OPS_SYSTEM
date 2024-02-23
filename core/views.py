@@ -23,7 +23,6 @@ class LoginUser(ObtainAuthToken):
     """Validate User Credentials And Return Token"""
 
     def post(self, request, *args, **kwargs):
-        print(request.data.get('password'))
         user = authenticate(username=request.data.get('username'), password=request.data.get('password'))
         if user:
             # Try to get an existing token
@@ -44,11 +43,12 @@ class LogoutUser(generics.GenericAPIView):
     serializer_class = UserSerializer
 
     def post(self, request, *args, **kwargs):
-        request.auth.delete()
+        request.auth.delete()  # deleting existing token
         return Response({"detail": "Logout successful"}, status=status.HTTP_200_OK)
 
 
 class TestListCreateView(generics.ListCreateAPIView):
+    """Create and List Test Basic Information"""
     serializer_class = TestSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
@@ -61,6 +61,7 @@ class TestListCreateView(generics.ListCreateAPIView):
 
 
 class TestDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """CRUD Operations on existing test's basic information"""
     serializer_class = TestSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
@@ -79,7 +80,7 @@ class SectionListView(generics.ListAPIView):
     authentication_classes = [TokenAuthentication]
 
     def get(self, request, *args, **kwargs):
-        testid = kwargs['testid']
+        testid = kwargs['testid']  # from url not query params
         try:
             objs = Section.objects.filter(test_id=testid)
         except:
@@ -89,6 +90,7 @@ class SectionListView(generics.ListAPIView):
 
 
 class SectionCreateView(generics.CreateAPIView):
+    """Create section only by test admin"""
     queryset = Section.objects.all()
     serializer_class = SectionSerializer
     permission_classes = [IsTestOwner, IsAuthenticated]
@@ -104,6 +106,7 @@ class SectionDestroyView(generics.DestroyAPIView):
 
 
 class McqListCreateView(generics.ListCreateAPIView):
+    """Creating And Listing Mcq for specific test"""
     serializer_class = McqSerializer
     permission_classes = [IsAuthenticated, IsTestOwner]
     authentication_classes = [TokenAuthentication]
@@ -117,6 +120,7 @@ class McqListCreateView(generics.ListCreateAPIView):
 
 
 class McqDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Crud operations on mcq which is created for specific test"""
     queryset = Mcq.objects.all()
     serializer_class = McqSerializer
     permission_classes = [IsTestOwner, IsAuthenticated]
@@ -152,6 +156,9 @@ class SubjectiveDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class RegisterUserTest(generics.CreateAPIView, generics.RetrieveAPIView):
+    """Register user for test other than owner
+    This view stores user's face embedding along with testid which they are registered
+    """
     serializer_class = RegisterUserSerializer
     permission_classes = [IsAuthenticated, IsOtherThanOwner]
     authentication_classes = [TokenAuthentication]
@@ -168,15 +175,15 @@ class RegisterUserTest(generics.CreateAPIView, generics.RetrieveAPIView):
         except:
             return Response({'error': 'invalid test id provided'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            print('inside try', RegisteredUser.objects.all())
-            data = RegisteredUser.objects.get(user_id=request.user, test_id=test_instance)
+            user_data = RegisteredUser.objects.get(user_id=request.user, test_id=test_instance)
         except:
             return Response({'error': f"No Data Found"}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(self.serializer_class(data).data, status=status.HTTP_200_OK)
+        return Response(self.serializer_class(user_data).data, status=status.HTTP_200_OK)
 
 
 class GetMcqQuestions(generics.ListAPIView):
+    """Endpoint for displaying question during the test"""
     serializer_class = ListMcqSerializer
     permission_classes = [IsAuthenticated, IsRegisterForTest]
     authentication_classes = [TokenAuthentication]
@@ -187,6 +194,7 @@ class GetMcqQuestions(generics.ListAPIView):
 
 
 class SubmitMcq(generics.ListCreateAPIView):
+    """Accepting Submission for mcq"""
     serializer_class = McqSubmissionSerializer
     permission_classes = [IsAuthenticated, IsRegisterForTest]
     authentication_classes = [TokenAuthentication]
@@ -202,7 +210,7 @@ class SubmitMcq(generics.ListCreateAPIView):
         # check if already submission exists.
         try:
             sub_instance = McqSubmission.objects.get(user_id=request.user, ques_id=validated.get('ques_id'),
-                                                      test_id=validated.get('test_id'))
+                                                     test_id=validated.get('test_id'))
             sub_instance.marked_option = validated.get('marked_option')
             sub_instance.save()
             return Response(self.serializer_class(sub_instance).data, status=status.HTTP_201_CREATED)
@@ -213,6 +221,7 @@ class SubmitMcq(generics.ListCreateAPIView):
 
 
 class GetSubjectiveQuestions(generics.ListAPIView):
+    """View for displaying subjective questions during test"""
     serializer_class = ListSubjectiveSerializer
     permission_classes = [IsAuthenticated, IsRegisterForTest]
     authentication_classes = [TokenAuthentication]
@@ -221,13 +230,15 @@ class GetSubjectiveQuestions(generics.ListAPIView):
         testid = self.kwargs.get('testid', None)
         return Subjective.objects.filter(test_id=testid)
 
+
 class SubmitSubjective(generics.ListCreateAPIView):
+    """Modifying existing submission for subjective questions"""
     serializer_class = SubjectiveSubmissionSerializer
     permission_classes = [IsAuthenticated, IsRegisterForTest]
     authentication_classes = [TokenAuthentication]
 
     def get_queryset(self):
-        testid = self.kwargs.get('testid', None)    # get from url
+        testid = self.kwargs.get('testid', None)  # get from url
         return SubjectiveSubmission.objects.filter(test_id=testid, user_id=self.request.user)
 
     def post(self, request, *args, **kwargs):
@@ -237,7 +248,7 @@ class SubmitSubjective(generics.ListCreateAPIView):
         print(validated)
         try:
             sub_instance = SubjectiveSubmission.objects.get(user_id=request.user, ques_id=validated.get('ques_id'),
-                                                      test_id=validated.get('test_id'))
+                                                            test_id=validated.get('test_id'))
             sub_instance.submitted_answer = validated.get('submitted_answer')
             print(sub_instance)
             sub_instance.save()
@@ -246,5 +257,3 @@ class SubmitSubjective(generics.ListCreateAPIView):
             # not exist before so create one
             serializer.save(user_id=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
