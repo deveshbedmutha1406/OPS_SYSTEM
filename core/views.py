@@ -177,7 +177,7 @@ class RegisterUserTest(generics.CreateAPIView, generics.RetrieveAPIView):
         try:
             user_data = RegisteredUser.objects.get(user_id=request.user, test_id=test_instance)
         except:
-            return Response({'error': f"No Data Found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': f"User Not Registered"}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(self.serializer_class(user_data).data, status=status.HTTP_200_OK)
 
@@ -257,3 +257,13 @@ class SubmitSubjective(generics.ListCreateAPIView):
             # not exist before so create one
             serializer.save(user_id=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class getAllTests(generics.ListAPIView):
+    """Return all test for general dashboard which are not created by other user's"""
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    serializer_class = TestSerializer
+
+    def get_queryset(self):
+        return Test.objects.exclude(created_by=self.request.user)

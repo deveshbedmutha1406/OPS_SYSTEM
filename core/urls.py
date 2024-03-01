@@ -26,4 +26,6 @@ urlpatterns = [
 
     path('getSubjectiveQuestions/<int:testid>/', views.GetSubjectiveQuestions.as_view()),
     path('submitSubjective/<int:testid>/', views.SubmitSubjective.as_view()),
+
+    path('generalDashboard', views.getAllTests.as_view()),
 ]
