@@ -7,6 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.exceptions import ValidationError
 from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission, SubjectiveSubmission
 from .serializers import TestSerializer, SectionSerializer, McqSerializer, SubjectiveSerializer, RegisterUserSerializer, \
     ListMcqSerializer, McqSubmissionSerializer, ListSubjectiveSerializer, SubjectiveSubmissionSerializer
@@ -104,6 +105,14 @@ class SectionDestroyView(generics.DestroyAPIView):
     authentication_classes = [TokenAuthentication]
     lookup_field = 'sid'
 
+    def perform_destroy(self, instance):
+        qtype = instance.qtype
+        testid = instance.test_id
+        if qtype == 'MCQ':
+            Mcq.objects.filter(test_id=testid).delete()
+        instance.delete()
+
+
 
 class McqListCreateView(generics.ListCreateAPIView):
     """Creating And Listing Mcq for specific test"""
@@ -113,10 +122,16 @@ class McqListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         testid = self.request.query_params.get('testid', None)
+        print(testid)
         return Mcq.objects.filter(test_id=testid)
 
     def perform_create(self, serializer):
-        serializer.save(settersid=self.request.user)
+        testObject = serializer.validated_data.get('test_id')
+        try:
+            Section.objects.get(test_id=testObject, qtype='MCQ')
+            serializer.save(settersid=self.request.user)
+        except:
+            raise ValidationError('Section does not exists')
 
 
 class McqDetailView(generics.RetrieveUpdateDestroyAPIView):

@@ -20,10 +20,17 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class TestSerializer(serializers.ModelSerializer):
+    sections = serializers.SerializerMethodField()
     class Meta:
         model = Test
-        fields = '__all__'
+        fields = ['testid', 'created_by', 'title', 'description','start_date','end_date','sections']
         extra_kwargs = {'created_by': {'read_only': True}}
+
+    def get_sections(self, obj):
+        l1 = []
+        for obj in Section.objects.filter(test_id=obj.testid):
+            l1.append({"qtype": obj.qtype,"sid": obj.sid})
+        return l1
 
 
 class SectionSerializer(serializers.ModelSerializer):
