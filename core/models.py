@@ -76,3 +76,37 @@ class SubjectiveSubmission(models.Model):
 
     class Meta:
         unique_together = ('user_id', 'test_id', 'ques_id')
+
+
+class Coding(models.Model):
+    qid = models.AutoField(primary_key=True)
+    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
+    settersid = models.ForeignKey(User, on_delete=models.CASCADE)
+    score = models.IntegerField(default=1)
+    title = models.CharField(max_length=1003)
+    body = models.TextField()
+    input_format = models.TextField()
+    output_format = models.TextField()
+    constraints = models.TextField()
+    sample_input = models.TextField()
+    sample_output = models.TextField()
+    time_limit = models.IntegerField(default=1)
+    memory_limit = models.IntegerField(default=256)
+
+    def __str__(self):
+        return self.title
+
+
+def user_directory_path_input(instance, filename):
+    return "QuestionData/{0}/input/{1}".format(instance.test_id.testid, filename)
+
+
+def user_directory_path_output(instance, filename):
+    return "QuestionData/{0}/output/{1}".format(instance.test_id.testid, filename)
+
+class TestCases(models.Model):
+    tid = models.AutoField(primary_key=True)
+    q_id = models.ForeignKey(Coding, on_delete=models.CASCADE)
+    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
+    tc_input = models.FileField(upload_to=user_directory_path_input)
+    tc_output = models.FileField(upload_to=user_directory_path_output)

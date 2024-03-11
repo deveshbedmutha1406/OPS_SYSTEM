@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from .serializers import UserSerializer
@@ -8,9 +9,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
-from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission, SubjectiveSubmission
+from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission, SubjectiveSubmission, Coding, TestCases
 from .serializers import TestSerializer, SectionSerializer, McqSerializer, SubjectiveSerializer, RegisterUserSerializer, \
-    ListMcqSerializer, McqSubmissionSerializer, ListSubjectiveSerializer, SubjectiveSubmissionSerializer
+    ListMcqSerializer, McqSubmissionSerializer, ListSubjectiveSerializer, SubjectiveSubmissionSerializer, CodingSerializer, TestCaseSerializer
 from .permissions import IsTestOwner, IsOtherThanOwner, IsRegisterForTest
 
 
@@ -282,3 +283,75 @@ class getAllTests(generics.ListAPIView):
 
     def get_queryset(self):
         return Test.objects.exclude(created_by=self.request.user)
+
+
+class CodingListCreateView(generics.ListCreateAPIView):
+    """Creating And Listing Coding for specific test"""
+    serializer_class = CodingSerializer
+    permission_classes = [IsAuthenticated, IsTestOwner]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.request.query_params.get('testid', None)
+        return Coding.objects.filter(test_id=testid)
+
+    def perform_create(self, serializer):
+        testObject = serializer.validated_data.get('test_id')
+        try:
+            Section.objects.get(test_id=testObject, qtype='CODING')
+            serializer.save(settersid=self.request.user)
+        except:
+            raise ValidationError('Section does not exists')
+
+
+class CodingDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Crud operations on Coding which is created for specific test"""
+    queryset = Coding.objects.all()
+    serializer_class = CodingSerializer
+    permission_classes = [IsTestOwner, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.request.data['test_id']
+        return Coding.objects.filter(test_id=testid)
+
+
+class TestCaseListCreateView(generics.ListCreateAPIView):
+    serializer_class = TestCaseSerializer
+    permission_classes = [IsTestOwner, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.request.query_params.get('testid', None)
+        return TestCases.objects.filter(test_id=testid)
+
+    def perform_create(self, serializer):
+        quesObject = serializer.validated_data.get('q_id')
+        try:
+            Coding.objects.get(qid=quesObject.qid)
+            serializer.save()
+        except:
+            raise ValidationError('Question does not exists')
+
+class TestCaseDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TestCaseSerializer
+    permission_classes = [IsTestOwner, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.request.data['test_id']
+        return TestCases.objects.filter(test_id=testid)
+
+    def perform_destroy(self, instance):
+        # Get the paths of the files associated with the TestCases instance
+        input_file_path = instance.tc_input.path
+        output_file_path = instance.tc_output.path
+
+        # Delete the files from the filesystem
+        if os.path.exists(input_file_path):
+            os.remove(input_file_path)
+        if os.path.exists(output_file_path):
+            os.remove(output_file_path)
+
+        # Delete the database instance
+        instance.delete()

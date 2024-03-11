@@ -16,6 +16,12 @@ urlpatterns = [
     path('mcq/', views.McqListCreateView.as_view()),
     path('mcq/<int:pk>/', views.McqDetailView.as_view()),
 
+    path('coding/', views.CodingListCreateView.as_view()),
+    path('coding/<int:pk>/', views.CodingDetailView.as_view()),
+
+    path('testCases/', views.TestCaseListCreateView.as_view()),
+    path('testCases/<int:pk>/', views.TestCaseDetailView.as_view()),
+
     path('subjective/', views.SubjectListCreateView.as_view()),
     path('subjective/<int:pk>/', views.SubjectiveDetailView.as_view()),
 
