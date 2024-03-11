@@ -1,4 +1,6 @@
 import os
+import datetime
+from .utils import add_cron_job, remove_cron_job
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from .serializers import UserSerializer
@@ -92,11 +94,27 @@ class SectionListView(generics.ListAPIView):
 
 
 class SectionCreateView(generics.CreateAPIView):
-    """Create section only by test admin"""
+    """Create section only by test admin also schedule cron job if coding question"""
     queryset = Section.objects.all()
     serializer_class = SectionSerializer
     permission_classes = [IsTestOwner, IsAuthenticated]
     authentication_classes = [TokenAuthentication]
+
+    def add_new_cron_job(self, exp, testid, flag):
+        tmp = os.path.join(os.getcwd(), 'startScript.sh') if flag else os.path.join(os.getcwd(), 'endScript.sh')
+        script_path = f'{tmp} {testid}'  # Example: path to your script file
+        add_cron_job(exp, script_path)
+
+    def perform_create(self, serializer):
+        testObject = serializer.validated_data.get('test_id')
+        if serializer.validated_data.get('qtype') == 'CODING':
+            st_date = testObject.start_date - datetime.timedelta(minutes=1)
+            en_date = testObject.end_date + datetime.timedelta(minutes=1)
+            exp = f"{st_date.minute} {st_date.hour} {st_date.day} {st_date.month} *"
+            end_exp = f"{en_date.minute} {en_date.hour} {en_date.day} {en_date.month} *"
+            self.add_new_cron_job(exp, testObject.testid, True)  # add cron job for this test
+            self.add_new_cron_job(end_exp, testObject.testid, False)
+        serializer.save()
 
 
 class SectionDestroyView(generics.DestroyAPIView):
@@ -111,6 +129,15 @@ class SectionDestroyView(generics.DestroyAPIView):
         testid = instance.test_id
         if qtype == 'MCQ':
             Mcq.objects.filter(test_id=testid).delete()
+        elif qtype == 'CODING':
+            Coding.objects.filter(test_id=testid).delete()
+            # remove cron jobs.
+            tmp = os.path.join(os.getcwd(), 'startScript.sh')
+            tmp2 = os.path.join(os.getcwd(), 'endScript.sh')
+            commands = [f"{tmp} {testid.testid}", f"{tmp2} {testid.testid}"]
+            remove_cron_job(commands)
+        else:
+            Subjective.objects.filter(test_id=testid).delete()
         instance.delete()
 
 

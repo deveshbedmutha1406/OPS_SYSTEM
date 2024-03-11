@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Test(models.Model):
     testid = models.AutoField(primary_key=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -23,6 +24,7 @@ class Section(models.Model):
 
     class Meta:
         unique_together = ('test_id', 'qtype')
+
 
 class Mcq(models.Model):
     qid = models.AutoField(primary_key=True)
@@ -49,7 +51,7 @@ class Subjective(models.Model):
 class RegisteredUser(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
-    embedding1 = models.TextField()    # this are face embeddings of user.
+    embedding1 = models.TextField()  # this are face embeddings of user.
     embedding2 = models.TextField()
 
     class Meta:
@@ -104,9 +106,17 @@ def user_directory_path_input(instance, filename):
 def user_directory_path_output(instance, filename):
     return "QuestionData/{0}/output/{1}".format(instance.test_id.testid, filename)
 
+
 class TestCases(models.Model):
     tid = models.AutoField(primary_key=True)
     q_id = models.ForeignKey(Coding, on_delete=models.CASCADE)
     test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
     tc_input = models.FileField(upload_to=user_directory_path_input)
     tc_output = models.FileField(upload_to=user_directory_path_output)
+
+
+class Containers(models.Model):
+    cid = models.AutoField(primary_key=True)
+    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
+    container_name = models.CharField(max_length=500)
+    status = models.BooleanField(default=False)  # ie not in use
