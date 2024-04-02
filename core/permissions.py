@@ -47,5 +47,5 @@ class IsRegisterForTest(permissions.BasePermission):
                 register_user_instance = RegisteredUser.objects.get(test_id=test_id, user_id=request.user)
                 return True
             except:
-                raise NotFound()
+                raise NotFound('Not registered for test')
         return False

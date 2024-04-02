@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission, SubjectiveSubmission, Coding, TestCases
+from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission, SubjectiveSubmission, Coding, TestCases, CodingSubmission
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -122,3 +122,10 @@ class TestCaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestCases
         fields = '__all__'
+
+
+class CodingSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CodingSubmission
+        fields = '__all__'
+        extra_kwargs = {'user_id': {'read_only': True}, 'status': {'read_only': True}}

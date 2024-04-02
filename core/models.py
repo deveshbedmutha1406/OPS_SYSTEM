@@ -120,3 +120,24 @@ class Containers(models.Model):
     test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
     container_name = models.CharField(max_length=500)
     status = models.BooleanField(default=False)  # ie not in use
+
+class CodingSubmission(models.Model):
+    subid = models.AutoField(primary_key=True)
+    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
+    ques_id = models.ForeignKey(Coding, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    lang = models.CharField(max_length=4)
+    code = models.TextField()
+    status = models.CharField(
+        max_length=20,
+        null=True,
+        choices=(
+            ("WA", "Wrong Answer"),
+            ("AC", "Accepted"),
+            ("TLE", "Time Limit Exceeded"),
+            ("CTE", "Compile Time Error"),
+            ("RE", "Runtime Error"),
+            ("MLE", "Memory Limit Exceeded"),
+        ),
+    )
+

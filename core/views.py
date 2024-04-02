@@ -1,5 +1,6 @@
 import os
 import datetime
+from .codesubmission import run_code
 from .utils import add_cron_job, remove_cron_job
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -11,9 +12,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
-from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission, SubjectiveSubmission, Coding, TestCases
+from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission, SubjectiveSubmission, Coding, TestCases, CodingSubmission, Containers
 from .serializers import TestSerializer, SectionSerializer, McqSerializer, SubjectiveSerializer, RegisterUserSerializer, \
-    ListMcqSerializer, McqSubmissionSerializer, ListSubjectiveSerializer, SubjectiveSubmissionSerializer, CodingSerializer, TestCaseSerializer
+    ListMcqSerializer, McqSubmissionSerializer, ListSubjectiveSerializer, SubjectiveSubmissionSerializer, CodingSerializer, TestCaseSerializer, CodingSubmissionSerializer
 from .permissions import IsTestOwner, IsOtherThanOwner, IsRegisterForTest
 
 
@@ -114,6 +115,8 @@ class SectionCreateView(generics.CreateAPIView):
             end_exp = f"{en_date.minute} {en_date.hour} {en_date.day} {en_date.month} *"
             self.add_new_cron_job(exp, testObject.testid, True)  # add cron job for this test
             self.add_new_cron_job(end_exp, testObject.testid, False)
+            for i in range(2):
+                Containers.objects.create(test_id=testObject, container_name=f"container_{testObject.testid}_{i + 1}")
         serializer.save()
 
 
@@ -382,3 +385,38 @@ class TestCaseDetailView(generics.RetrieveUpdateDestroyAPIView):
 
         # Delete the database instance
         instance.delete()
+
+
+class CodingSubmissionView(generics.ListCreateAPIView):
+    serializer_class = CodingSubmissionSerializer
+    permission_classes = [IsRegisterForTest, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        var = self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(var, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        data = serializer.validated_data
+        code = data.get('code')
+        lang = data.get('lang')
+        test_id = data.get('test_id').testid
+        ques_id = data.get('ques_id').qid
+        var = run_code(code, lang, test_id, ques_id)
+        serializer.save(user_id=self.request.user, status=var['returnCode'])
+        return var
+
+
+
+class GetCodingQuestions(generics.ListCreateAPIView):
+    """Listing Coding for specific test During Test"""
+    serializer_class = CodingSerializer
+    permission_classes = [IsAuthenticated, IsRegisterForTest]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.kwargs.get('testid', None)
+        return Coding.objects.filter(test_id=testid)
