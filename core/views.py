@@ -12,9 +12,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
-from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission, SubjectiveSubmission, Coding, TestCases, CodingSubmission, Containers
+from .models import Test, Section, Mcq, Subjective, RegisteredUser, McqSubmission, SubjectiveSubmission, Coding, TestCases, CodingSubmission, Containers, SuspiciousImages, SuspiciousScore
 from .serializers import TestSerializer, SectionSerializer, McqSerializer, SubjectiveSerializer, RegisterUserSerializer, \
-    ListMcqSerializer, McqSubmissionSerializer, ListSubjectiveSerializer, SubjectiveSubmissionSerializer, CodingSerializer, TestCaseSerializer, CodingSubmissionSerializer
+    ListMcqSerializer, McqSubmissionSerializer, ListSubjectiveSerializer, SubjectiveSubmissionSerializer, CodingSerializer, TestCaseSerializer, CodingSubmissionSerializer, SuspiciousImagesSerializer, SuspiciousScoreSerializer
 from .permissions import IsTestOwner, IsOtherThanOwner, IsRegisterForTest
 
 
@@ -400,12 +400,13 @@ class CodingSubmissionView(generics.ListCreateAPIView):
         return Response(var, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
+        customInput = self.request.data['customInput']
         data = serializer.validated_data
         code = data.get('code')
         lang = data.get('lang')
         test_id = data.get('test_id').testid
         ques_id = data.get('ques_id').qid
-        var = run_code(code, lang, test_id, ques_id)
+        var = run_code(code, lang, test_id, ques_id, customInput)
         serializer.save(user_id=self.request.user, status=var['returnCode'])
         return var
 
@@ -420,3 +421,27 @@ class GetCodingQuestions(generics.ListCreateAPIView):
     def get_queryset(self):
         testid = self.kwargs.get('testid', None)
         return Coding.objects.filter(test_id=testid)
+
+class UploadSusImages(generics.ListCreateAPIView):
+    serializer_class = SuspiciousImagesSerializer
+    permission_classes = [IsAuthenticated, IsRegisterForTest]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.kwargs.get('testid', None)
+        return SuspiciousImages.objects.filter(test_id=testid, user_id=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user)
+
+class UpdateSusScore(generics.ListCreateAPIView):
+    serializer_class = SuspiciousScoreSerializer
+    permission_classes = [IsAuthenticated, IsRegisterForTest]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.kwargs.get('testid', None)
+        return SuspiciousScore.objects.filter(test_id=testid, user_id=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user)

@@ -141,3 +141,17 @@ class CodingSubmission(models.Model):
         ),
     )
 
+def user_directory_path_image(instance, filename):
+    return "UserData/{0}/{1}/{2}".format(instance.test_id.testid, instance.user_id.username,filename)
+
+class SuspiciousImages(models.Model):
+    id = models.AutoField(primary_key=True)
+    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=user_directory_path_image)
+
+class SuspiciousScore(models.Model):
+    id = models.AutoField(primary_key=True)
+    tab_switch_count = models.IntegerField(default=0)
+    test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)

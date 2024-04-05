@@ -16,7 +16,7 @@ if [ $# -ne 1 ]; then
   exit 1
 fi
 
-# Get name and testid from arguments
+# Get testid from arguments
 testid="$1"
 
 # Ensure containers directory exists in the current working directory

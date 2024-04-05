@@ -37,4 +37,7 @@ urlpatterns = [
     path('submitCoding/<int:testid>/', views.CodingSubmissionView.as_view()),
 
     path('generalDashboard', views.getAllTests.as_view()),
+
+    path('SusImages/<int:testid>/', views.UploadSusImages.as_view()),
+    path('SusScore/<int:testid>/', views.UpdateSusScore.as_view()),
 ]

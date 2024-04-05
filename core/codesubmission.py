@@ -4,6 +4,11 @@ import os
 import subprocess
 import shutil
 
+def swap_input(container_name, test_id, cust):
+    dest=f"containers/{test_id}/{container_name}/input.txt"
+    with open(dest, 'w') as inp:
+        inp.write(cust)
+    
 
 def swap_code(container_name,code,language,time_limit,memory_limit, test_id):
     dest=f"containers/{test_id}/{container_name}/sub.py"
@@ -68,10 +73,11 @@ def returnContainer(container):
     container.status=False
     container.save()
 
-def run_code(code, language, tid, qid):
+def run_code(code, language, tid, qid, custInp):
     container=find_container()
     get_sub(container.container_name, tid)
     swap_code(container.container_name, code, language, 1, 512, tid)
+    swap_input(container.container_name, tid, custInp)
     execute(container.container_name)
     rcode=get_returnCode(container.container_name, tid)
     er = get_Error(container.container_name, tid)
