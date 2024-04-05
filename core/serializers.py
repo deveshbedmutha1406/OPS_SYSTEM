@@ -54,10 +54,14 @@ class SubjectiveSerializer(serializers.ModelSerializer):
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
     class Meta:
         model = RegisteredUser
-        fields = '__all__'
+        fields = ['user_id', 'test_id', 'embedding1', 'embedding2', 'username']
         extra_kwargs = {'user_id': {'read_only': True}}
+
+    def get_username(self, obj):
+        return obj.user_id.username
 
 
 class ListMcqSerializer(serializers.ModelSerializer):

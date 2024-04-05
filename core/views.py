@@ -17,16 +17,13 @@ from .serializers import TestSerializer, SectionSerializer, McqSerializer, Subje
     ListMcqSerializer, McqSubmissionSerializer, ListSubjectiveSerializer, SubjectiveSubmissionSerializer, CodingSerializer, TestCaseSerializer, CodingSubmissionSerializer, SuspiciousImagesSerializer, SuspiciousScoreSerializer
 from .permissions import IsTestOwner, IsOtherThanOwner, IsRegisterForTest
 
-
 class UserRegistration(generics.CreateAPIView):
     """Registers User"""
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-
 class LoginUser(ObtainAuthToken):
     """Validate User Credentials And Return Token"""
-
     def post(self, request, *args, **kwargs):
         user = authenticate(username=request.data.get('username'), password=request.data.get('password'))
         if user:
@@ -116,7 +113,7 @@ class SectionCreateView(generics.CreateAPIView):
             self.add_new_cron_job(exp, testObject.testid, True)  # add cron job for this test
             self.add_new_cron_job(end_exp, testObject.testid, False)
             for i in range(2):
-                Containers.objects.create(test_id=testObject, container_name=f"container_{testObject.testid}_{i + 1}")
+                Containers.objects.get_or_create(test_id=testObject, container_name=f"container_{testObject.testid}_{i + 1}")
         serializer.save()
 
 
@@ -424,12 +421,14 @@ class GetCodingQuestions(generics.ListCreateAPIView):
 
 class UploadSusImages(generics.ListCreateAPIView):
     serializer_class = SuspiciousImagesSerializer
-    permission_classes = [IsAuthenticated, IsRegisterForTest]
+    permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
 
     def get_queryset(self):
         testid = self.kwargs.get('testid', None)
-        return SuspiciousImages.objects.filter(test_id=testid, user_id=self.request.user)
+        userid = self.request.query_params.get('uid', None)
+        print(userid, testid)
+        return SuspiciousImages.objects.filter(test_id=testid, user_id=userid)
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
@@ -441,7 +440,24 @@ class UpdateSusScore(generics.ListCreateAPIView):
 
     def get_queryset(self):
         testid = self.kwargs.get('testid', None)
-        return SuspiciousScore.objects.filter(test_id=testid, user_id=self.request.user)
+        userid = self.kwargs.get('userid', None)
+        return SuspiciousScore.objects.filter(test_id=testid, user_id=userid)
 
     def perform_create(self, serializer):
-        serializer.save(user_id=self.request.user)
+        testid = self.kwargs.get('testid', None)
+        userid = self.kwargs.get('userid', None)
+        
+        existing_object = SuspiciousScore.objects.filter(test_id=testid, user_id=self.request.user).first()
+        if existing_object:
+            serializer.update(existing_object, serializer.validated_data)
+        else:
+            serializer.save(user_id=self.request.user)
+
+class getRegisteredUserForTest(generics.ListAPIView):
+    serializer_class = RegisterUserSerializer
+    permission_classes = [IsAuthenticated, IsTestOwner]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        testid = self.kwargs.get('testid', None)
+        return RegisteredUser.objects.filter(test_id=testid)

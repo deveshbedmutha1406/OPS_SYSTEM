@@ -45,20 +45,25 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000"
-
+    "http://localhost:3000",
+    "http://192.168.31.155:3000",
 ]
+ALLOWED_HOSTS = ['192.168.31.155', '127.0.0.1', 'localhost']
+# CORS_ORIGIN_WHITELIST = [
+#     'http://192.168.31.155:3000',
+# ]
+# settings.py
+
 
 
 ROOT_URLCONF = 'OPS.urls'
