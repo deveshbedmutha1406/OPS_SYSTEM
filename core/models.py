@@ -149,6 +149,7 @@ class SuspiciousImages(models.Model):
     test_id = models.ForeignKey(Test, on_delete=models.CASCADE)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to=user_directory_path_image)
+    tag = models.CharField(max_length=50, null=True, blank=True)
 
 class SuspiciousScore(models.Model):
     id = models.AutoField(primary_key=True)

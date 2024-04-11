@@ -449,7 +449,8 @@ class UpdateSusScore(generics.ListCreateAPIView):
         
         existing_object = SuspiciousScore.objects.filter(test_id=testid, user_id=self.request.user).first()
         if existing_object:
-            serializer.update(existing_object, serializer.validated_data)
+            existing_object.tab_switch_count = existing_object.tab_switch_count + 1
+            existing_object.save()
         else:
             serializer.save(user_id=self.request.user)
 
