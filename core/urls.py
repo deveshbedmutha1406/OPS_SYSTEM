@@ -42,4 +42,6 @@ urlpatterns = [
     path('SusScore/<int:testid>/<int:userid>/', views.UpdateSusScore.as_view()),
 
     path('getRegisteredUsers/<int:testid>/', views.getRegisteredUserForTest.as_view()),
+
+    path('getMcqScore/<int:testid>/<int:userid>/', views.getMcqScore.as_view()),
 ]

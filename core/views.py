@@ -462,3 +462,20 @@ class getRegisteredUserForTest(generics.ListAPIView):
     def get_queryset(self):
         testid = self.kwargs.get('testid', None)
         return RegisteredUser.objects.filter(test_id=testid)
+
+
+class getMcqScore(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsTestOwner]
+    authentication_classes = [TokenAuthentication]
+    def get(self, request, *args, **kwargs):
+        testid = self.kwargs.get('testid', None)
+        userid = self.kwargs.get('userid', None)
+        McqQues = Mcq.objects.filter(test_id=testid).values('qid', 'correct_option')
+        McqSubs = McqSubmission.objects.filter(test_id=testid, user_id=userid).values('ques_id', 'marked_option')
+        key_map = {ele['qid']: ele['correct_option'] for ele in McqQues}
+        score = 0
+        for ele in McqSubs:
+            if ele['ques_id'] in key_map:
+                if ele['marked_option'] == key_map[ele['ques_id']]:
+                    score += 1
+        return Response({'score': score}, status=status.HTTP_200_OK)
